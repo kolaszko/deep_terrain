@@ -174,7 +174,7 @@ class TransformerBatchNormEncoderLayer(nn.modules.Module):
         super(TransformerBatchNormEncoderLayer, self).__setstate__(state)
 
     def forward(self, src: Tensor, src_mask: Optional[Tensor] = None,
-                src_key_padding_mask: Optional[Tensor] = None) -> Tensor:
+                src_key_padding_mask: Optional[Tensor] = None, is_causal: Optional[bool] = False) -> Tensor:
         r"""Pass the input through the encoder layer.
 
         Args:
@@ -222,7 +222,7 @@ class TSTransformerEncoder(nn.Module):
                 d_model, self.n_heads, dim_feedforward, dropout * (1.0 - freeze),
                 activation=activation)
 
-        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers)
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers, mask_check=False)
 
         self.output_layer = nn.Linear(d_model, feat_dim)
 
@@ -232,7 +232,7 @@ class TSTransformerEncoder(nn.Module):
 
         self.feat_dim = feat_dim
 
-    def forward(self, X, padding_masks):
+    def forward(self, X):
         """
         Args:
             X: (batch_size, seq_length, feat_dim) torch tensor of masked features (input)
@@ -247,7 +247,7 @@ class TSTransformerEncoder(nn.Module):
             self.d_model)  # [seq_length, batch_size, d_model] project input vectors to d_model dimensional space
         inp = self.pos_enc(inp)  # add positional encoding
         # NOTE: logic for padding masks is reversed to comply with definition in MultiHeadAttention, TransformerEncoderLayer
-        output = self.transformer_encoder(inp, src_key_padding_mask=~padding_masks)  # (seq_length, batch_size, d_model)
+        output = self.transformer_encoder(inp)  # (seq_length, batch_size, d_model)
         output = self.act(output)  # the output transformer encoder/decoder embeddings don't include non-linearity
         output = output.permute(1, 0, 2)  # (batch_size, seq_length, d_model)
         output = self.dropout1(output)
@@ -283,7 +283,7 @@ class TSTransformerEncoderClassiregressor(nn.Module):
                 d_model, self.n_heads, dim_feedforward, dropout * (1.0 - freeze),
                 activation=activation)
 
-        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers)
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers, mask_check=False)
 
         self.act = _get_activation_fn(activation)
 
@@ -299,7 +299,7 @@ class TSTransformerEncoderClassiregressor(nn.Module):
         # add F.log_softmax and use NLLoss
         return output_layer
 
-    def forward(self, X, padding_masks):
+    def forward(self, X):
         """
         Args:
             X: (batch_size, seq_length, feat_dim) torch tensor of masked features (input)
@@ -314,13 +314,12 @@ class TSTransformerEncoderClassiregressor(nn.Module):
             self.d_model)  # [seq_length, batch_size, d_model] project input vectors to d_model dimensional space
         inp = self.pos_enc(inp)  # add positional encoding
         # NOTE: logic for padding masks is reversed to comply with definition in MultiHeadAttention, TransformerEncoderLayer
-        output = self.transformer_encoder(inp, src_key_padding_mask=~padding_masks)  # (seq_length, batch_size, d_model)
+        output = self.transformer_encoder(inp)  # (seq_length, batch_size, d_model)
         output = self.act(output)  # the output transformer encoder/decoder embeddings don't include non-linearity
         output = output.permute(1, 0, 2)  # (batch_size, seq_length, d_model)
         output = self.dropout1(output)
 
         # Output
-        output = output * padding_masks.unsqueeze(-1)  # zero-out padding embeddings
         output = output.reshape(output.shape[0], -1)  # (batch_size, seq_length * d_model)
         output = self.output_layer(output)  # (batch_size, num_classes)
 
