@@ -1,8 +1,9 @@
+import matplotlib.pyplot as plt
 import pytorch_lightning as pl
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 import torchmetrics
+from neptune.types import File
 from sklearn.metrics import ConfusionMatrixDisplay
 
 from .ts_transformer import TSTransformerEncoderClassiregressor
@@ -12,13 +13,13 @@ default_config = {
     'max_len': 160,
     'd_model': 64,
     'n_heads': 8,
-    'num_layers': 3,
+    'num_layers': 8,
     'dim_feedforward': 256,
     'num_classes': 8,
-    'dropout': 0.1,
+    'dropout': 0.2,
     'pos_encoding': 'fixed',
     'activation': 'gelu',
-    'norm': 'BatchNorm',
+    'norm': 'LayerNorm',
     'freeze': False
 }
 
@@ -26,6 +27,9 @@ default_config = {
 class LitTSTransformerClassifier(pl.LightningModule):
     def __init__(self, config=default_config) -> None:
         super().__init__()
+
+        self.config = config
+        self.model_name = 'TSTransformerEncoderClassiregressor'
 
         self.encoder = TSTransformerEncoderClassiregressor(
             config['feat_dim'],
@@ -41,35 +45,57 @@ class LitTSTransformerClassifier(pl.LightningModule):
             norm=config['norm'],
             freeze=config['freeze'])
 
-        self.accuracy = torchmetrics.Accuracy(task="multiclass", num_classes=config['num_classes'])
-        self.confusion_matrix = torchmetrics.ConfusionMatrix(task="multiclass", num_classes=config['num_classes'])
+        self.accuracy = torchmetrics.Accuracy(task='multiclass', num_classes=config['num_classes'])
+        self.f1_score = torchmetrics.F1Score(task='multiclass', num_classes=config['num_classes'])
+        self.precision = torchmetrics.Precision(task='multiclass', num_classes=config['num_classes'])
+        self.recall = torchmetrics.Recall(task='multiclass', num_classes=config['num_classes'])
+        self.confusion_matrix = torchmetrics.ConfusionMatrix(task='multiclass', num_classes=config['num_classes'])
 
     def training_step(self, batch, batch_index):
         x, _, y = batch
         y_hat = self.encoder(x)
-        loss = F.cross_entropy(y_hat, y, torch.tensor(self.trainer.datamodule.weights, dtype=torch.float))
-        self.log("train/loss", loss, on_step=False, on_epoch=True, prog_bar=True)
+        loss = F.cross_entropy(y_hat, y, torch.tensor(
+            self.trainer.datamodule.weights, dtype=torch.float, device=self.device))
+        self.log("train/loss", loss, on_epoch=True, on_step=False, prog_bar=True)
         return loss
 
     def validation_step(self, batch, batch_idx):
         x, _, y = batch
         y_hat = self.encoder(x)
-        val_loss = F.cross_entropy(y_hat, y)
-        self.log("val/loss", val_loss, on_step=False, on_epoch=True, prog_bar=True)
+        val_loss = F.cross_entropy(y_hat, y, torch.tensor(
+            self.trainer.datamodule.weights, dtype=torch.float, device=self.device))
+        self.log("val/loss", val_loss, on_epoch=True, on_step=False, prog_bar=True)
 
     def test_step(self, batch, batch_idx):
         x, _, y = batch
         y_hat = self.encoder(x)
-        val_loss = F.cross_entropy(y_hat, y)
-        self.log("test/loss", val_loss, on_step=True, on_epoch=False, prog_bar=True)
+        val_loss = F.cross_entropy(y_hat, y, torch.tensor(
+            self.trainer.datamodule.weights, dtype=torch.float, device=self.device))
+        self.log("test/loss", val_loss, on_epoch=True, on_step=False, prog_bar=True)
 
-        preds = F.softmax(y_hat, dim=1)
-        self.accuracy(preds, y)
-        self.log('test/acc', self.accuracy, on_step=False, on_epoch=True, prog_bar=True)
+        _, pred = torch.max(y_hat, dim=1)
 
-        self.confusion_matrix(preds, y)
+        self.calculate_metrics(pred, y)
+        self.log_all_metrics()
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.encoder.parameters(), lr=1e-3)
-        lr_scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1)
+        optimizer = torch.optim.Adam(self.encoder.parameters(), lr=5e-4)
+        lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.98)
         return [optimizer], [lr_scheduler]
+
+    def calculate_metrics(self, pred, target):
+        self.accuracy(pred, target)
+        self.f1_score(pred, target)
+        self.recall(pred, target)
+        self.precision(pred, target)
+        self.confusion_matrix(pred, target)
+
+    def log_all_metrics(self):
+        disp = ConfusionMatrixDisplay(self.confusion_matrix.compute().cpu().numpy())
+        disp.plot(cmap=plt.cm.get_cmap("Blues"), xticks_rotation='vertical')
+        self.logger.experiment["test/confusion_matrix"].upload(File.as_image(disp.figure_))
+
+        self.log('test/accuracy', self.accuracy, on_epoch=True, on_step=False, prog_bar=True)
+        self.log('test/f1_score', self.f1_score, on_epoch=True, on_step=False, prog_bar=True)
+        self.log('test/recall', self.recall, on_epoch=True, on_step=False, prog_bar=True)
+        self.log('test/precision', self.precision, on_epoch=True, on_step=False, prog_bar=True)
