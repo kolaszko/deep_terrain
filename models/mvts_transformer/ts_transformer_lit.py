@@ -46,10 +46,11 @@ class LitTSTransformerClassifier(pl.LightningModule):
             freeze=config['freeze'])
 
         self.accuracy = torchmetrics.Accuracy(task='multiclass', num_classes=config['num_classes'])
-        self.f1_score = torchmetrics.F1Score(task='multiclass', num_classes=config['num_classes'])
-        self.precision = torchmetrics.Precision(task='multiclass', num_classes=config['num_classes'])
-        self.recall = torchmetrics.Recall(task='multiclass', num_classes=config['num_classes'])
-        self.confusion_matrix = torchmetrics.ConfusionMatrix(task='multiclass', num_classes=config['num_classes'])
+        self.f1_score = torchmetrics.F1Score(task='multiclass', num_classes=config['num_classes'], average='macro')
+        self.precision = torchmetrics.Precision(task='multiclass', num_classes=config['num_classes'], average='macro')
+        self.recall = torchmetrics.Recall(task='multiclass', num_classes=config['num_classes'], average='macro')
+        self.confusion_matrix = torchmetrics.ConfusionMatrix(
+            task='multiclass', num_classes=config['num_classes'])
 
     def training_step(self, batch, batch_index):
         x, _, y = batch
