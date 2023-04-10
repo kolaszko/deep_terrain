@@ -12,10 +12,11 @@ class LitBaseCls(pl.LightningModule):
         self.model_name = 'BaseCls'
 
         self.accuracy = torchmetrics.Accuracy(task='multiclass', num_classes=num_classes)
-        self.f1_score = torchmetrics.F1Score(task='multiclass', num_classes=num_classes)
-        self.precision = torchmetrics.Precision(task='multiclass', num_classes=num_classes)
-        self.recall = torchmetrics.Recall(task='multiclass', num_classes=num_classes)
-        self.confusion_matrix = torchmetrics.ConfusionMatrix(task='multiclass', num_classes=num_classes)
+        self.f1_score = torchmetrics.F1Score(task='multiclass', num_classes=num_classes, average='macro')
+        self.precision = torchmetrics.Precision(task='multiclass', num_classes=num_classes, average='macro')
+        self.recall = torchmetrics.Recall(task='multiclass', num_classes=num_classes, average='macro')
+        self.confusion_matrix = torchmetrics.ConfusionMatrix(
+            task='multiclass', num_classes=num_classes)
 
     def calculate_metrics(self, pred, target):
         self.accuracy(pred, target)
