@@ -6,7 +6,7 @@ from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor
 from pytorch_lightning.loggers import NeptuneLogger
 
 from data import LitHapticDataset
-from models import LitTSTransformerClassifier
+from models import LitTSTransformerClassifier, LitTCNClassifier
 
 
 def objective(args):
@@ -22,7 +22,8 @@ def objective(args):
     trainer = pl.Trainer(
         max_epochs=250, callbacks=[early_stop_callback, lr_monitor], logger=logger)
 
-    model = LitTSTransformerClassifier()
+    # model = LitTSTransformerClassifier()
+    model = LitTCNClassifier()
     data = LitHapticDataset(args.dataset_path, 128)
 
     logger.experiment['model'] = model.model_name

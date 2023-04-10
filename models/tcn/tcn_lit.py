@@ -1,48 +1,39 @@
+import matplotlib.pyplot as plt
+import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
 
 from ..base_models import LitBaseCls
-from .ts_transformer import TSTransformerEncoderClassiregressor
+from .tcn import TCNClassifier
+
 
 default_config = {
-    'feat_dim': 6,
-    'max_len': 160,
-    'd_model': 64,
-    'n_heads': 8,
-    'num_layers': 8,
-    'dim_feedforward': 256,
+    'input_channels': 6,
+    'levels': 8,
+    'num_hid': 25,
     'num_classes': 8,
-    'dropout': 0.2,
-    'pos_encoding': 'fixed',
-    'activation': 'gelu',
-    'norm': 'LayerNorm',
-    'freeze': False
+    'kernel_size': 2,
+    'dropout': 0.2
 }
 
 
-class LitTSTransformerClassifier(LitBaseCls):
-    def __init__(self, config=default_config) -> None:
+class LitTCNClassifier(LitBaseCls):
+    def __init__(self, config=default_config):
         super().__init__(config['num_classes'])
 
         self.config = config
-        self.model_name = 'TSTransformerEncoderClassiregressor'
+        self.model_name = 'TCNClassifier'
 
-        self.model = TSTransformerEncoderClassiregressor(
-            config['feat_dim'],
-            config['max_len'],
-            config['d_model'],
-            config['n_heads'],
-            config['num_layers'],
-            config['dim_feedforward'],
+        self.model = TCNClassifier(
+            config['input_channels'],
+            [config['num_hid']] * config['levels'],
             config['num_classes'],
-            dropout=config['dropout'],
-            pos_encoding=config['pos_encoding'],
-            activation=config['activation'],
-            norm=config['norm'],
-            freeze=config['freeze'])
+            config['kernel_size'],
+            config['dropout'])
 
     def training_step(self, batch, batch_index):
         x, _, y = batch
+        x = x.permute(0, 2, 1)
         y_hat = self.model(x)
         loss = F.cross_entropy(y_hat, y, torch.tensor(
             self.trainer.datamodule.weights, dtype=torch.float, device=self.device))
@@ -51,6 +42,7 @@ class LitTSTransformerClassifier(LitBaseCls):
 
     def validation_step(self, batch, batch_idx):
         x, _, y = batch
+        x = x.permute(0, 2, 1)
         y_hat = self.model(x)
         val_loss = F.cross_entropy(y_hat, y, torch.tensor(
             self.trainer.datamodule.weights, dtype=torch.float, device=self.device))
@@ -58,6 +50,7 @@ class LitTSTransformerClassifier(LitBaseCls):
 
     def test_step(self, batch, batch_idx):
         x, _, y = batch
+        x = x.permute(0, 2, 1)
         y_hat = self.model(x)
         val_loss = F.cross_entropy(y_hat, y, torch.tensor(
             self.trainer.datamodule.weights, dtype=torch.float, device=self.device))
