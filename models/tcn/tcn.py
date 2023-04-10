@@ -73,4 +73,5 @@ class TCNClassifier(nn.Module):
 
     def forward(self, x):
         output = self.model(x)
-        return self.cls_head(output)
+        output = self.cls_head(output[:, :, -1])
+        return output
