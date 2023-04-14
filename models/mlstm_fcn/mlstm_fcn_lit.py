@@ -81,12 +81,12 @@ class LitMLSTMfcnClassifier(LitBaseCls):
     @classmethod
     def fromOptunaTrial(cls, trial):
         config = cls.get_default_config()
-        config['num_lstm_layers'] = trial.suggest_categorical('num_lstm_layers', [1, 2, 4, 8])
-        config['num_lstm_out'] = trial.suggest_categorical('num_lstm_out', [128, 256])
-        config['conv1_nf'] = trial.suggest_categorical('conv1_nf', [64, 128, 256])
-        config['conv2_nf'] = trial.suggest_categorical('conv2_nf', [128, 256, 512])
-        config['conv3_nf'] = trial.suggest_categorical('conv3_nf', [128, 256, 512])
-        config['lstm_drop_p'] = trial.suggest_float('lstm_drop_p', 0.1, 0.8)
-        config['fc_drop_p'] = trial.suggest_float('fc_drop_p', 0.1, 0.8)
+        config['num_lstm_layers'] = 2 ** trial.suggest_int('num_lstm_layers', 0, 3, step=1)
+        config['num_lstm_out'] = 2 ** trial.suggest_int('num_lstm_out', 7, 8, step=1)
+        config['conv1_nf'] = 2 ** trial.suggest_int('conv1_nf', 6, 8, step=1)
+        config['conv2_nf'] = 2 ** trial.suggest_int('conv2_nf', 7, 9, step=1)
+        config['conv3_nf'] = 2 ** trial.suggest_int('conv3_nf', 7, 9, step=1)
+        config['lstm_drop_p'] = trial.suggest_float('lstm_drop_p', 0.1, 0.8, step=0.1)
+        config['fc_drop_p'] = trial.suggest_float('fc_drop_p', 0.1, 0.8, step=0.1)
 
         return cls(config=config)

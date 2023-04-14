@@ -74,9 +74,9 @@ class LitTCNClassifier(LitBaseCls):
     @classmethod
     def fromOptunaTrial(cls, trial):
         config = cls.get_default_config()
-        config['levels'] = trial.suggest_int('levels', 1, 24)
-        config['num_hid'] = trial.suggest_int('num_hid', 25, 625, 50)
-        config['kernel_size'] = trial.suggest_int('kernel_size', 2, 10)
-        config['dropout'] = trial.suggest_float('dropout', 0.1, 0.8)
+        config['levels'] = trial.suggest_int('levels', 1, 24, step=3)
+        config['num_hid'] = trial.suggest_int('num_hid', 5, 625, step=50)
+        config['kernel_size'] = trial.suggest_int('kernel_size', 2, 10, step=1)
+        config['dropout'] = trial.suggest_float('dropout', 0.1, 0.8, step=0.1)
 
         return cls(config=config)

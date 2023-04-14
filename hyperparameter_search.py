@@ -51,7 +51,7 @@ def rerun_best_trial(trial, args, algorithm):
         log_model_checkpoints=False)
 
     trainer = pl.Trainer(max_epochs=args.max_epochs, callbacks=[
-        EarlyStopping(monitor="val/accuracy", min_delta=0.00, patience=50, verbose=True, mode="min")], logger=logger,
+        EarlyStopping(monitor="val/accuracy", min_delta=0.00, patience=50, verbose=True, mode="max")], logger=logger,
         accelerator='gpu' if torch.cuda.is_available() else 'cpu', devices=1, log_every_n_steps=1)
 
     data = LitHapticDataset(args.dataset_path, args.batch_size)
@@ -72,7 +72,7 @@ def rerun_best_trial(trial, args, algorithm):
 
 def optuna_pipeline(args):
 
-    algorithms = [LitMLSTMfcnClassifier, LitTCNClassifier, LitTSTransformerClassifier]
+    algorithms = [LitTCNClassifier]
 
     for algo in algorithms:
         pruner = optuna.pruners.MedianPruner()
@@ -84,7 +84,7 @@ def optuna_pipeline(args):
 if __name__ == '__main__':
 
     parser = ArgumentParser()
-    parser.add_argument('--dataset-path', type=str, required=True)
+    parser.add_argument('--dataset-path', type=str, default='/home/mikolaj/Datasets/friction/friction_classes.pickle')
     parser.add_argument('--batch-size', type=int, default=64)
     parser.add_argument('--max-epochs', type=int, default=350)
 

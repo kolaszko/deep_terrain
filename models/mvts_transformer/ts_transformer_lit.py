@@ -84,13 +84,13 @@ class LitTSTransformerClassifier(LitBaseCls):
     @classmethod
     def fromOptunaTrial(cls, trial):
         config = cls.get_default_config()
-        config['d_model'] = trial.suggest_categorical('d_model', [32, 64, 128])
-        config['n_heads'] = trial.suggest_categorical('num_lstm_out', [4, 8, 16])
-        config['num_layers'] = trial.suggest_categorical('num_layers', [3, 8, 12])
-        config['dim_feedforward'] = trial.suggest_categorical('dim_feedforward', [256, 512])
-        config['pos_encoding'] = trial.suggest_categorical('pos_encoding', ['fixed', 'learnable']),
-        config['activation'] = trial.suggest_categorical('activation', ['gelu', 'relu']),
-        config['norm'] = trial.suggest_categorical('norm', ['LayerNorm', 'BatchNorm']),
-        config['dropout'] = trial.suggest_float('dropout', 0.1, 0.8)
+        config['d_model'] = 2 ** trial.suggest_int('d_model', 5, 7, step=1)
+        config['n_heads'] = 2 ** trial.suggest_int('num_lstm_out', 2, 4, step=1)
+        config['num_layers'] = 2 ** trial.suggest_int('num_layers', 2, 4, step=1)
+        config['dim_feedforward'] = 2 ** trial.suggest_int('dim_feedforward', 8, 9, step=1)
+        config['pos_encoding'] = trial.suggest_categorical('pos_encoding', ['fixed', 'learnable'])
+        config['activation'] = trial.suggest_categorical('activation', ['gelu', 'relu'])
+        config['norm'] = trial.suggest_categorical('norm', ['LayerNorm', 'BatchNorm'])
+        config['dropout'] = trial.suggest_float('dropout', 0.1, 0.8, step=0.1)
 
         return cls(config=config)
