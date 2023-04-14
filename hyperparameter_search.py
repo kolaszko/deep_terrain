@@ -72,7 +72,17 @@ def rerun_best_trial(trial, args, algorithm):
 
 def optuna_pipeline(args):
 
-    algorithms = [LitTCNClassifier]
+    algorithms = []
+    if args.tcn:
+        algorithms.append(LitTCNClassifier)
+
+    if args.mlstm_fcn:
+        algorithms.append(LitMLSTMfcnClassifier)
+
+    if args.ts_transformer:
+        algorithms.append(LitTSTransformerClassifier)
+
+    print(algorithms)
 
     for algo in algorithms:
         pruner = optuna.pruners.MedianPruner()
@@ -84,9 +94,12 @@ def optuna_pipeline(args):
 if __name__ == '__main__':
 
     parser = ArgumentParser()
-    parser.add_argument('--dataset-path', type=str, default='/home/mikolaj/Datasets/friction/friction_classes.pickle')
+    parser.add_argument('--dataset-path', type=str, default='/root/friction_classes.pickle')
     parser.add_argument('--batch-size', type=int, default=64)
     parser.add_argument('--max-epochs', type=int, default=350)
+    parser.add_argument('--tcn', action='store_true')
+    parser.add_argument('--mlstm-fcn', action='store_true')
+    parser.add_argument('--ts-transformer', action='store_true')
 
     args, _ = parser.parse_known_args()
     optuna_pipeline(args)
