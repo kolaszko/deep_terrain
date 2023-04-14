@@ -1,5 +1,3 @@
-import matplotlib.pyplot as plt
-import pytorch_lightning as pl
 import torch
 import torch.nn.functional as F
 
@@ -7,21 +5,14 @@ from ..base_models import LitBaseCls
 from .tcn import TCNClassifier
 
 
-default_config = {
-    'input_channels': 6,
-    'levels': 8,
-    'num_hid': 25,
-    'num_classes': 8,
-    'kernel_size': 2,
-    'dropout': 0.2
-}
-
-
 class LitTCNClassifier(LitBaseCls):
-    def __init__(self, config=default_config):
+    def __init__(self, config=None):
         super().__init__(config['num_classes'])
 
         self.config = config
+        if self.config == None:
+            self.config = LitTCNClassifier.get_default_config()
+
         self.model_name = 'TCNClassifier'
 
         self.model = TCNClassifier(
@@ -48,6 +39,9 @@ class LitTCNClassifier(LitBaseCls):
             self.trainer.datamodule.weights, dtype=torch.float, device=self.device))
         self.log("val/loss", val_loss, on_epoch=True, on_step=False, prog_bar=True)
 
+        self.calculate_val_metrics(y_hat, y)
+        self.log_all_val_metrics()
+
     def test_step(self, batch, batch_idx):
         x, _, y = batch
         x = x.permute(0, 2, 1)
@@ -58,10 +52,31 @@ class LitTCNClassifier(LitBaseCls):
 
         _, pred = torch.max(y_hat, dim=1)
 
-        self.calculate_metrics(pred, y)
-        self.log_all_metrics()
+        self.calculate_test_metrics(pred, y)
+        self.log_all_test_metrics()
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.model.parameters(), lr=5e-4)
+        optimizer = torch.optim.AdamW(self.model.parameters(), lr=5e-4)
         lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.98)
         return [optimizer], [lr_scheduler]
+
+    @staticmethod
+    def get_default_config():
+        return {
+            'input_channels': 6,
+            'levels': 16,
+            'num_hid': 44,
+            'num_classes': 8,
+            'kernel_size': 3,
+            'dropout': 0.2
+        }
+
+    @classmethod
+    def fromOptunaTrial(cls, trial):
+        config = cls.get_default_config()
+        config['levels'] = trial.suggest_int('levels', 1, 24)
+        config['num_hid'] = trial.suggest_int('num_hid', 25, 625, 50)
+        config['kernel_size'] = trial.suggest_int('kernel_size', 2, 10)
+        config['dropout'] = trial.suggest_float('dropout', 0.1, 0.8)
+
+        return cls(config=config)

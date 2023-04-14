@@ -24,10 +24,10 @@ class LitHapticDataset(pl.LightningDataModule):
         self.weights = weights
 
     def train_dataloader(self):
-        return DataLoader(self.train_ds, batch_size=self.batch_size, shuffle=True)
+        return DataLoader(self.train_ds, batch_size=self.batch_size, shuffle=True, num_workers=8, pin_memory=True)
 
     def val_dataloader(self):
-        return DataLoader(self.val_ds, batch_size=self.batch_size, shuffle=False)
+        return DataLoader(self.val_ds, batch_size=self.batch_size, shuffle=False, num_workers=8, pin_memory=True)
 
     def test_dataloader(self):
-        return DataLoader(self.test_ds, batch_size=self.batch_size, shuffle=False)
+        return DataLoader(self.test_ds, batch_size=self.batch_size, shuffle=False, num_workers=8, pin_memory=True)
