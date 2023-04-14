@@ -22,7 +22,7 @@ def objective(trial, args, algorithm):
         log_model_checkpoints=False)
 
     trainer = pl.Trainer(max_epochs=args.max_epochs, callbacks=[
-        EarlyStopping(monitor="val/accuracy", min_delta=0.00, patience=50, verbose=True, mode="max"),
+        PyTorchLightningPruningCallback(trial, monitor="val/accuracy"),
         LearningRateMonitor(logging_interval='epoch')], logger=logger,
         accelerator='gpu' if torch.cuda.is_available() else 'cpu', devices=1, log_every_n_steps=2)
 
@@ -88,8 +88,9 @@ def optuna_pipeline(args):
     print(algorithms)
 
     for algo in algorithms:
-        study = optuna.create_study(direction="maximize")
-        study.optimize(lambda trial: objective(trial, args, algo), n_trials=100, timeout=600)
+        pruner = optuna.pruners.MedianPruner()
+        study = optuna.create_study(direction="maximize", pruner=pruner)
+        study.optimize(lambda trial: objective(trial, args, algo))
         rerun_best_trial(study.best_trial, args, algo)
 
 
