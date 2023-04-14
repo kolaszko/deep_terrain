@@ -22,7 +22,8 @@ def objective(trial, args, algorithm):
         log_model_checkpoints=False)
 
     trainer = pl.Trainer(max_epochs=args.max_epochs, callbacks=[
-        PyTorchLightningPruningCallback(trial, monitor="val/accuracy")], logger=logger,
+        PyTorchLightningPruningCallback(trial, monitor="val/accuracy"),
+        LearningRateMonitor(logging_interval='epoch')], logger=logger,
         accelerator='gpu' if torch.cuda.is_available() else 'cpu', devices=1, log_every_n_steps=2)
 
     data = LitHapticDataset(args.dataset_path, args.batch_size)
@@ -51,7 +52,9 @@ def rerun_best_trial(trial, args, algorithm):
         log_model_checkpoints=False)
 
     trainer = pl.Trainer(max_epochs=args.max_epochs, callbacks=[
-        EarlyStopping(monitor="val/accuracy", min_delta=0.00, patience=50, verbose=True, mode="max")], logger=logger,
+        EarlyStopping(monitor="val/accuracy", min_delta=0.00, patience=50, verbose=True, mode="max"),
+        LearningRateMonitor(logging_interval='epoch')],
+        logger=logger,
         accelerator='gpu' if torch.cuda.is_available() else 'cpu', devices=1, log_every_n_steps=1)
 
     data = LitHapticDataset(args.dataset_path, args.batch_size)
