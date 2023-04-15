@@ -81,7 +81,7 @@ class LitMLSTMfcnClassifier(LitBaseCls):
     @classmethod
     def fromOptunaTrial(cls, trial):
         config = cls.get_default_config()
-        config['num_lstm_layers'] = 2 ** trial.suggest_int('num_lstm_layers', 0, 3, step=1)
+        config['num_lstm_layers'] = 2 ** trial.suggest_int('num_lstm_layers', 1, 3, step=1)
         config['num_lstm_out'] = 2 ** trial.suggest_int('num_lstm_out', 7, 8, step=1)
         config['conv1_nf'] = 2 ** trial.suggest_int('conv1_nf', 6, 8, step=1)
         config['conv2_nf'] = 2 ** trial.suggest_int('conv2_nf', 7, 9, step=1)

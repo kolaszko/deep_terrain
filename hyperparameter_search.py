@@ -24,22 +24,24 @@ def objective(trial, args, algorithm):
     trainer = pl.Trainer(max_epochs=args.max_epochs, callbacks=[
         PyTorchLightningPruningCallback(trial, monitor="val/accuracy"),
         LearningRateMonitor(logging_interval='epoch')], logger=logger,
-        accelerator='gpu' if torch.cuda.is_available() else 'cpu', devices=1, log_every_n_steps=2)
+        accelerator='gpu' if torch.cuda.is_available() else 'cpu', devices=1, log_every_n_steps=2,
+        enable_progress_bar=False)
 
-    data = LitHapticDataset(args.dataset_path, args.batch_size)
-    model = algorithm.fromOptunaTrial(trial)
+    try:
+        data = LitHapticDataset(args.dataset_path, args.batch_size)
+        model = algorithm.fromOptunaTrial(trial)
 
-    tuner = Tuner(trainer)
-    tuner.scale_batch_size(model, datamodule=data)
+        tuner = Tuner(trainer)
+        tuner.scale_batch_size(model, datamodule=data)
 
-    logger.experiment['model'] = model.model_name
-    logger.experiment['hyperparams'] = model.config
-    logger.experiment['batch_size'] = data.batch_size
+        logger.experiment['model'] = model.model_name
+        logger.experiment['hyperparams'] = model.config
+        logger.experiment['batch_size'] = data.batch_size
 
-    trainer.fit(model, data)
-    metric = trainer.callback_metrics["val/accuracy"].item()
-
-    logger.experiment.stop()
+        trainer.fit(model, data)
+    finally:
+        metric = trainer.callback_metrics["val/accuracy"].item()
+        logger.experiment.stop()
 
     return metric
 
@@ -57,20 +59,21 @@ def rerun_best_trial(trial, args, algorithm):
         logger=logger,
         accelerator='gpu' if torch.cuda.is_available() else 'cpu', devices=1, log_every_n_steps=1)
 
-    data = LitHapticDataset(args.dataset_path, args.batch_size)
-    model = algorithm.fromOptunaTrial(trial)
+    try:
+        data = LitHapticDataset(args.dataset_path, args.batch_size)
+        model = algorithm.fromOptunaTrial(trial)
 
-    tuner = Tuner(trainer)
-    tuner.scale_batch_size(model, datamodule=data)
+        tuner = Tuner(trainer)
+        tuner.scale_batch_size(model, datamodule=data)
 
-    logger.experiment['model'] = model.model_name
-    logger.experiment['hyperparams'] = model.config
-    logger.experiment['batch_size'] = data.batch_size
+        logger.experiment['model'] = model.model_name
+        logger.experiment['hyperparams'] = model.config
+        logger.experiment['batch_size'] = data.batch_size
 
-    trainer.fit(model, data)
-    trainer.test(datamodule=data)
-
-    logger.experiment.stop()
+        trainer.fit(model, data)
+        trainer.test(datamodule=data)
+    finally:
+        logger.experiment.stop()
 
 
 def optuna_pipeline(args):
@@ -90,7 +93,7 @@ def optuna_pipeline(args):
     for algo in algorithms:
         pruner = optuna.pruners.MedianPruner()
         study = optuna.create_study(direction="maximize", pruner=pruner)
-        study.optimize(lambda trial: objective(trial, args, algo))
+        study.optimize(lambda trial: objective(trial, args, algo), gc_after_trial=True)
         rerun_best_trial(study.best_trial, args, algo)
 
 
