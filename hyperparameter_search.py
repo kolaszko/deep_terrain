@@ -24,7 +24,8 @@ def objective(trial, args, algorithm):
     trainer = pl.Trainer(max_epochs=args.max_epochs, callbacks=[
         PyTorchLightningPruningCallback(trial, monitor="val/accuracy"),
         LearningRateMonitor(logging_interval='epoch')], logger=logger,
-        accelerator='gpu' if torch.cuda.is_available() else 'cpu', devices=1, log_every_n_steps=2)
+        accelerator='gpu' if torch.cuda.is_available() else 'cpu', devices=1, log_every_n_steps=2,
+        enable_progress_bar=False)
 
     data = LitHapticDataset(args.dataset_path, args.batch_size)
     model = algorithm.fromOptunaTrial(trial)
@@ -38,8 +39,6 @@ def objective(trial, args, algorithm):
 
     trainer.fit(model, data)
     metric = trainer.callback_metrics["val/accuracy"].item()
-
-    logger.experiment.stop()
 
     return metric
 
@@ -69,8 +68,6 @@ def rerun_best_trial(trial, args, algorithm):
 
     trainer.fit(model, data)
     trainer.test(datamodule=data)
-
-    logger.experiment.stop()
 
 
 def optuna_pipeline(args):
