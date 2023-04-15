@@ -2,11 +2,14 @@ import os
 from argparse import ArgumentParser
 
 import pytorch_lightning as pl
+import torch
 from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor
 from pytorch_lightning.loggers import NeptuneLogger
+from pytorch_lightning.tuner.tuning import Tuner
 
 from data import LitHapticDataset
-from models import LitTSTransformerClassifier, LitTCNClassifier
+from models import (LitMLSTMfcnClassifier, LitTCNClassifier,
+                    LitTSTransformerClassifier)
 
 
 def objective(args):
@@ -20,11 +23,16 @@ def objective(args):
     lr_monitor = LearningRateMonitor(logging_interval='epoch')
 
     trainer = pl.Trainer(
-        max_epochs=250, callbacks=[early_stop_callback, lr_monitor], logger=logger)
+        max_epochs=1, callbacks=[early_stop_callback, lr_monitor], logger=logger, log_every_n_steps=1,
+        accelerator='gpu' if torch.cuda.is_available() else 'cpu', devices=1)
 
-    # model = LitTSTransformerClassifier()
-    model = LitTCNClassifier()
+    model = LitTSTransformerClassifier()
     data = LitHapticDataset(args.dataset_path, 128)
+
+    tuner = Tuner(trainer)
+    tuner.scale_batch_size(model, datamodule=data)
+
+    print(data.batch_size)
 
     logger.experiment['model'] = model.model_name
     logger.experiment['hyperparams'] = model.config

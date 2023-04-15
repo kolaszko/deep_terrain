@@ -5,6 +5,7 @@ __pycache__/
 
 *lightning_logs/
 *neptune/
+*.ckpt
 # C extensions
 *.so
 

@@ -222,7 +222,7 @@ class TSTransformerEncoder(nn.Module):
                 d_model, self.n_heads, dim_feedforward, dropout * (1.0 - freeze),
                 activation=activation)
 
-        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers, mask_check=False)
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers)
 
         self.output_layer = nn.Linear(d_model, feat_dim)
 
@@ -283,7 +283,7 @@ class TSTransformerEncoderClassiregressor(nn.Module):
                 d_model, self.n_heads, dim_feedforward, dropout * (1.0 - freeze),
                 activation=activation)
 
-        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers, mask_check=False)
+        self.transformer_encoder = nn.TransformerEncoder(encoder_layer, num_layers)
 
         self.act = _get_activation_fn(activation)
 
