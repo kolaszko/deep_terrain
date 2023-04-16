@@ -65,18 +65,18 @@ class LitTCNClassifier(LitBaseCls):
         return {
             'input_channels': 6,
             'levels': 16,
-            'num_hid': 44,
+            'num_hid': 305,
             'num_classes': 8,
-            'kernel_size': 3,
+            'kernel_size': 6,
             'dropout': 0.2
         }
 
     @classmethod
     def fromOptunaTrial(cls, trial):
         config = cls.get_default_config()
-        config['levels'] = trial.suggest_int('levels', 1, 24, step=3)
-        config['num_hid'] = trial.suggest_int('num_hid', 5, 625, step=50)
-        config['kernel_size'] = trial.suggest_int('kernel_size', 2, 10, step=1)
+        config['levels'] = trial.suggest_int('levels', 1, 16, step=3)
+        config['num_hid'] = trial.suggest_int('num_hid', 5, 305, step=50)
+        config['kernel_size'] = trial.suggest_int('kernel_size', 2, 6, step=1)
         config['dropout'] = trial.suggest_float('dropout', 0.1, 0.8, step=0.1)
 
         return cls(config=config)
