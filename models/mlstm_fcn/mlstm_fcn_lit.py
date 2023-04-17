@@ -17,7 +17,7 @@ class LitMLSTMfcnClassifier(LitBaseCls):
 
         self.model = MLSTMfcn(
             num_classes=config['num_classes'],
-            max_seq_len=config['max_seq_len'],
+            max_seq_len=config['max_len'],
             num_features=config['num_features'],
             num_lstm_out=config['num_lstm_out'],
             num_lstm_layers=config['num_lstm_layers'],
@@ -67,7 +67,7 @@ class LitMLSTMfcnClassifier(LitBaseCls):
     def get_default_config():
         return {
             'num_features': 6,
-            'max_seq_len': 160,
+            'max_len': 160,
             'num_lstm_layers': 2,
             'num_lstm_out': 128,
             'num_classes': 8,
