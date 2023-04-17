@@ -1,17 +1,14 @@
 import torch
 import torch.nn.functional as F
 
-from ..base_models import LitBaseCls
+from ..base_models import LitBaseCls, LitBaseRegressor
 from .ts_transformer import TSTransformerEncoderClassiregressor
 
 
 class LitTSTransformerClassifier(LitBaseCls):
-    def __init__(self, config=None):
-        self.config = config
-        if self.config == None:
-            self.config = LitTSTransformerClassifier.get_default_config()
-
+    def __init__(self, config):
         super().__init__(self.config['num_classes'])
+        self.config = config
 
         self.model_name = 'TSTransformerEncoderClassiregressor'
 
