@@ -117,7 +117,7 @@ class LitTSTransformerRegressor(LitBaseRegressor):
     def training_step(self, batch, batch_index):
         x, y, _ = batch
 
-        y_hat = F.relu(self.model(x))
+        y_hat = F.gelu(self.model(x))
         y_hat = torch.squeeze(y_hat)
 
         loss = F.mse_loss(y_hat, y)
@@ -128,7 +128,7 @@ class LitTSTransformerRegressor(LitBaseRegressor):
     def validation_step(self, batch, batch_idx):
         x, y, _ = batch
 
-        y_hat = F.relu(self.model(x))
+        y_hat = F.gelu(self.model(x))
         y_hat = torch.squeeze(y_hat)
 
         val_loss = F.mse_loss(y_hat, y)
@@ -140,7 +140,7 @@ class LitTSTransformerRegressor(LitBaseRegressor):
     def test_step(self, batch, batch_idx):
         x, y, _ = batch
 
-        y_hat = F.relu(self.model(x))
+        y_hat = F.gelu(self.model(x))
         y_hat = torch.squeeze(y_hat)
 
         val_loss = F.mse_loss(y_hat, y)

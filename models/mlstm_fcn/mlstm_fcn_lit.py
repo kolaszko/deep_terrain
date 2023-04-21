@@ -113,7 +113,7 @@ class LitMLSTMfcnRegressor(LitBaseRegressor):
     def training_step(self, batch, batch_index):
         x, y, _ = batch
 
-        y_hat = F.relu(self.model(x, [self.config['max_len']] * x.shape[0]))
+        y_hat = F.gelu(self.model(x, [self.config['max_len']] * x.shape[0]))
         y_hat = torch.squeeze(y_hat)
 
         loss = F.mse_loss(y_hat, y)
@@ -123,7 +123,7 @@ class LitMLSTMfcnRegressor(LitBaseRegressor):
     def validation_step(self, batch, batch_idx):
         x, y, _ = batch
 
-        y_hat = F.relu(self.model(x, [self.config['max_len']] * x.shape[0]))
+        y_hat = F.gelu(self.model(x, [self.config['max_len']] * x.shape[0]))
         y_hat = torch.squeeze(y_hat)
 
         val_loss = F.mse_loss(y_hat, y)
@@ -135,7 +135,7 @@ class LitMLSTMfcnRegressor(LitBaseRegressor):
     def test_step(self, batch, batch_idx):
         x, y, _ = batch
 
-        y_hat = F.relu(self.model(x, [self.config['max_len']] * x.shape[0]))
+        y_hat = F.gelu(self.model(x, [self.config['max_len']] * x.shape[0]))
         y_hat = torch.squeeze(y_hat)
 
         test_loss = F.mse_loss(y_hat, y)
