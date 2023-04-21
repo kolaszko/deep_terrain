@@ -113,7 +113,7 @@ class LitMLSTMfcnRegressor(LitBaseRegressor):
     def training_step(self, batch, batch_index):
         x, y, _ = batch
 
-        y_hat = self.model(x, [self.config['max_len']] * x.shape[0])
+        y_hat = F.relu(self.model(x, [self.config['max_len']] * x.shape[0]))
         y_hat = torch.squeeze(y_hat)
 
         loss = F.mse_loss(y_hat, y)
@@ -123,7 +123,7 @@ class LitMLSTMfcnRegressor(LitBaseRegressor):
     def validation_step(self, batch, batch_idx):
         x, y, _ = batch
 
-        y_hat = self.model(x, [self.config['max_len']] * x.shape[0])
+        y_hat = F.relu(self.model(x, [self.config['max_len']] * x.shape[0]))
         y_hat = torch.squeeze(y_hat)
 
         val_loss = F.mse_loss(y_hat, y)
@@ -135,7 +135,7 @@ class LitMLSTMfcnRegressor(LitBaseRegressor):
     def test_step(self, batch, batch_idx):
         x, y, _ = batch
 
-        y_hat = self.model(x, [self.config['max_len']] * x.shape[0])
+        y_hat = F.relu(self.model(x, [self.config['max_len']] * x.shape[0]))
         y_hat = torch.squeeze(y_hat)
 
         test_loss = F.mse_loss(y_hat, y)
@@ -149,8 +149,11 @@ class LitMLSTMfcnRegressor(LitBaseRegressor):
         lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.98)
         return [optimizer], [lr_scheduler]
 
-    def load_cls_state(self, cls):
-        cls_dict = cls.model.state_dict()
+    def load_cls_state(self, cls_ckpt_path, config):
+        classifier = LitMLSTMfcnClassifier.load_from_checkpoint(
+            cls_ckpt_path, config=config)
+
+        cls_dict = classifier.model.state_dict()
         del cls_dict['fc.weight']
         del cls_dict['fc.bias']
 

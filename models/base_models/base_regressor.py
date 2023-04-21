@@ -52,12 +52,12 @@ class LitBaseRegressor(pl.LightningModule):
                  on_epoch=True, on_step=False, prog_bar=True)
         self.log('test/explained_variance', self.explained_variance,
                  on_epoch=True, on_step=False, prog_bar=True)
-        self.log('test/kendall_tau', self.kendall_tau, on_epoch=True, on_step=False, prog_bar=True)
+        # self.log('test/kendall_tau', self.kendall_tau, on_epoch=True, on_step=False, prog_bar=True)
         self.log('test/log_cosh_error', self.log_cosh_error, on_epoch=True, on_step=False, prog_bar=True)
         self.log('test/mae', self.mae, on_epoch=True, on_step=False, prog_bar=True)
         self.log('test/mape', self.mape, on_epoch=True, on_step=False, prog_bar=True)
         self.log('test/mse', self.mse, on_epoch=True, on_step=False, prog_bar=True)
-        self.log('test/msle', self.msle, on_epoch=True, on_step=False, prog_bar=True)
+        # self.log('test/msle', self.msle, on_epoch=True, on_step=False, prog_bar=True)
         self.log('test/pearson_corrcoef', self.pearson_corrcoef, on_epoch=True, on_step=False, prog_bar=True)
         self.log('test/r2score', self.r2score, on_epoch=True, on_step=False, prog_bar=True)
         self.log('test/spearman_corrcoef', self.spearman_corrcoef,

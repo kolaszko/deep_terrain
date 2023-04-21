@@ -117,7 +117,7 @@ class LitTSTransformerRegressor(LitBaseRegressor):
     def training_step(self, batch, batch_index):
         x, y, _ = batch
 
-        y_hat = self.model(x)
+        y_hat = F.relu(self.model(x))
         y_hat = torch.squeeze(y_hat)
 
         loss = F.mse_loss(y_hat, y)
@@ -128,7 +128,7 @@ class LitTSTransformerRegressor(LitBaseRegressor):
     def validation_step(self, batch, batch_idx):
         x, y, _ = batch
 
-        y_hat = self.model(x)
+        y_hat = F.relu(self.model(x))
         y_hat = torch.squeeze(y_hat)
 
         val_loss = F.mse_loss(y_hat, y)
@@ -140,7 +140,7 @@ class LitTSTransformerRegressor(LitBaseRegressor):
     def test_step(self, batch, batch_idx):
         x, y, _ = batch
 
-        y_hat = self.model(x)
+        y_hat = F.relu(self.model(x))
         y_hat = torch.squeeze(y_hat)
 
         val_loss = F.mse_loss(y_hat, y)
@@ -154,8 +154,11 @@ class LitTSTransformerRegressor(LitBaseRegressor):
         lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.98)
         return [optimizer], [lr_scheduler]
 
-    def load_cls_state(self, cls):
-        cls_dict = cls.model.state_dict()
+    def load_cls_state(self, cls_ckpt_path, config):
+        classifier = LitTSTransformerClassifier.load_from_checkpoint(
+            cls_ckpt_path, config=config)
+
+        cls_dict = classifier.model.state_dict()
         del cls_dict['output_layer.weight']
         del cls_dict['output_layer.bias']
 

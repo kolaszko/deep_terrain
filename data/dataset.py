@@ -77,7 +77,7 @@ def get_putany_regression_dataset(path, split_size, exclude_classes, normalize=T
 
     if normalize:
         signals = [s['signal'] for s in trainval_dataset]
-        coeffs = [s['friction'] for s in trainval_dataset]
+        coeffs = [s['friction'] for s in dataset]
 
         signals = np.asarray(signals)
         coeffs = np.asarray(coeffs)
@@ -88,13 +88,16 @@ def get_putany_regression_dataset(path, split_size, exclude_classes, normalize=T
         mean_coeffs = np.mean(coeffs)
         std_coeffs = np.mean(coeffs)
 
+        max_coeffs = np.max(coeffs)
+        min_coeffs = np.min(coeffs)
+
         for s in trainval_dataset:
             s['signal'] = (s['signal'] - mean_signal) / std_signal
-            s['friction'] = (s['friction'] - mean_coeffs) / std_coeffs
+            s['friction'] = (s['friction'] - min_coeffs) / (max_coeffs - min_coeffs)
 
         for s in test_dataset:
             s['signal'] = (s['signal'] - mean_signal) / std_signal
-            s['friction'] = (s['friction'] - mean_coeffs) / std_coeffs
+            s['friction'] = (s['friction'] - min_coeffs) / (max_coeffs - min_coeffs)
 
     train_dataset, val_dataset = train_test_split(trainval_dataset, test_size=split_size, stratify=[
         sample['label'] for sample in trainval_dataset], random_state=random_state)
@@ -132,6 +135,7 @@ def get_moist_regression_dataset(path, split_size, exclude_classes, random_state
     ds_raw = np.loadtxt(path)
 
     moist_table = np.asarray([0.12, 0.2, 0.32, 0.56, 0.64, 0.76])
+    moist_table = (moist_table - np.min(moist_table)) / (np.max(moist_table) - np.min(moist_table))
 
     moist_mean = np.mean(moist_table)
     moist_std = np.std(moist_table)
