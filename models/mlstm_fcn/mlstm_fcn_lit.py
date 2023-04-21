@@ -66,14 +66,14 @@ class LitMLSTMfcnClassifier(LitBaseCls):
         return {
             'num_features': 6,
             'max_len': 160,
-            'num_lstm_layers': 2,
-            'num_lstm_out': 128,
+            'num_lstm_layers': 8,
+            'num_lstm_out': 256,
             'num_classes': 8,
-            'conv1_nf': 128,
+            'conv1_nf': 256,
             'conv2_nf': 256,
-            'conv3_nf': 128,
-            'lstm_drop_p': 0.8,
-            'fc_drop_p': 0.3
+            'conv3_nf': 512,
+            'lstm_drop_p': 0.4,
+            'fc_drop_p': 0.1
         }
 
     @classmethod
@@ -145,23 +145,30 @@ class LitMLSTMfcnRegressor(LitBaseRegressor):
         self.log_all_test_metrics()
 
     def configure_optimizers(self):
-        optimizer = torch.optim.AdamW(self.model.parameters(), lr=5e-4)
+        optimizer = torch.optim.AdamW(self.model.parameters(), lr=5e-5)
         lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.98)
         return [optimizer], [lr_scheduler]
+
+    def load_cls_state(self, cls):
+        cls_dict = cls.model.state_dict()
+        del cls_dict['fc.weight']
+        del cls_dict['fc.bias']
+
+        self.model.load_state_dict(cls_dict, strict=False)
 
     @staticmethod
     def get_default_config():
         return {
             'num_features': 6,
             'max_len': 160,
-            'num_lstm_layers': 2,
-            'num_lstm_out': 128,
+            'num_lstm_layers': 8,
+            'num_lstm_out': 256,
             'num_classes': 1,
-            'conv1_nf': 128,
+            'conv1_nf': 256,
             'conv2_nf': 256,
-            'conv3_nf': 128,
-            'lstm_drop_p': 0.8,
-            'fc_drop_p': 0.3
+            'conv3_nf': 512,
+            'lstm_drop_p': 0.4,
+            'fc_drop_p': 0.1
         }
 
     @classmethod
