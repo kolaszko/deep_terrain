@@ -85,9 +85,6 @@ def get_putany_regression_dataset(path, split_size, exclude_classes, normalize=T
         mean_signal = np.mean(signals, (0, 1))
         std_signal = np.std(signals, (0, 1))
 
-        mean_coeffs = np.mean(coeffs)
-        std_coeffs = np.mean(coeffs)
-
         max_coeffs = np.max(coeffs)
         min_coeffs = np.min(coeffs)
 
@@ -136,11 +133,6 @@ def get_moist_regression_dataset(path, split_size, exclude_classes, random_state
 
     moist_table = np.asarray([0.12, 0.2, 0.32, 0.56, 0.64, 0.76])
     moist_table = (moist_table - np.min(moist_table)) / (np.max(moist_table) - np.min(moist_table))
-
-    moist_mean = np.mean(moist_table)
-    moist_std = np.std(moist_table)
-
-    moist_table = (moist_table - moist_mean) / moist_std
 
     dataset = []
     for i in range(ds_raw.shape[0]):
