@@ -20,7 +20,7 @@ def train_cls(args, algorithm):
         tags=["initial-classification", "hyperparam"],
         log_model_checkpoints=False)
 
-    model_checkpoint = ModelCheckpoint(monitor='val/accuracy', mode='max')
+    model_checkpoint = ModelCheckpoint(monitor='val/accuracy', mode='max', save_top_k=1)
     trainer = pl.Trainer(max_epochs=args.max_epochs, callbacks=[
         EarlyStopping(monitor="val/accuracy", min_delta=0.00, patience=200, verbose=True, mode="max"),
         LearningRateMonitor(logging_interval='epoch'),
@@ -59,7 +59,7 @@ def train_reg(args, algorithm, exclude_classes, cls_ckpt_path, cls_config):
         tags=["regression", "combinations", "best"],
         log_model_checkpoints=False)
 
-    model_checkpoint = ModelCheckpoint(monitor='val/loss', mode='min')
+    model_checkpoint = ModelCheckpoint(monitor='val/loss', mode='min', save_top_k=1)
     trainer = pl.Trainer(max_epochs=args.max_epochs, callbacks=[
         EarlyStopping(monitor="val/loss", min_delta=0.00, patience=200, verbose=True, mode="min"),
         LearningRateMonitor(logging_interval='epoch'),
@@ -87,7 +87,7 @@ def train_reg(args, algorithm, exclude_classes, cls_ckpt_path, cls_config):
     logger.experiment['excluded_classes'] = str(exclude_classes)
 
     trainer.fit(model, data)
-    trainer.test(datamodule=data)
+    trainer.test(datamodule=data, ckpt_path='best')
 
     logger.experiment.stop()
 
