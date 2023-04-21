@@ -47,9 +47,10 @@ class LitBaseRegressor(pl.LightningModule):
         self.wmape(pred, target)
 
     def log_all_test_metrics(self):
-        self.log('test/concordance_cc', self.concordance_cc, on_epoch=True, on_step=False, prog_bar=True)
-        self.log('test/cosine_similarity', self.cosine_similarity,
-                 on_epoch=True, on_step=False, prog_bar=True)
+
+        # self.log('test/concordance_cc', self.concordance_cc, on_epoch=True, on_step=False, prog_bar=True)
+        # self.log('test/cosine_similarity', self.cosine_similarity,
+        #  on_epoch=True, on_step=False, prog_bar=True)
         self.log('test/explained_variance', self.explained_variance,
                  on_epoch=True, on_step=False, prog_bar=True)
         # self.log('test/kendall_tau', self.kendall_tau, on_epoch=True, on_step=False, prog_bar=True)
@@ -58,7 +59,7 @@ class LitBaseRegressor(pl.LightningModule):
         self.log('test/mape', self.mape, on_epoch=True, on_step=False, prog_bar=True)
         self.log('test/mse', self.mse, on_epoch=True, on_step=False, prog_bar=True)
         # self.log('test/msle', self.msle, on_epoch=True, on_step=False, prog_bar=True)
-        self.log('test/pearson_corrcoef', self.pearson_corrcoef, on_epoch=True, on_step=False, prog_bar=True)
+        # self.log('test/pearson_corrcoef', self.pearson_corrcoef, on_epoch=True, on_step=False, prog_bar=True)
         self.log('test/r2score', self.r2score, on_epoch=True, on_step=False, prog_bar=True)
         self.log('test/spearman_corrcoef', self.spearman_corrcoef,
                  on_epoch=True, on_step=False, prog_bar=True)
