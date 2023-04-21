@@ -22,7 +22,7 @@ def train_cls(args, algorithm):
 
     model_checkpoint = ModelCheckpoint(monitor='val/accuracy', mode='max', save_top_k=1)
     trainer = pl.Trainer(max_epochs=args.max_epochs, callbacks=[
-        EarlyStopping(monitor="val/accuracy", min_delta=0.00, patience=200, verbose=True, mode="max"),
+        EarlyStopping(monitor="val/accuracy", min_delta=0.00, patience=100, verbose=True, mode="max"),
         LearningRateMonitor(logging_interval='epoch'),
         model_checkpoint],
         logger=logger,
@@ -61,7 +61,7 @@ def train_reg(args, algorithm, exclude_classes, cls_ckpt_path, cls_config):
 
     model_checkpoint = ModelCheckpoint(monitor='val/loss', mode='min', save_top_k=1)
     trainer = pl.Trainer(max_epochs=args.max_epochs, callbacks=[
-        EarlyStopping(monitor="val/loss", min_delta=0.00, patience=200, verbose=True, mode="min"),
+        EarlyStopping(monitor="val/loss", min_delta=0.00, patience=50, verbose=True, mode="min"),
         LearningRateMonitor(logging_interval='epoch'),
         model_checkpoint],
         logger=logger,
