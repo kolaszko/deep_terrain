@@ -30,20 +30,24 @@ class LitHapticDataset(pl.LightningDataModule):
                 train_ds, val_ds, test_ds, weights = get_putany_cls_dataset(
                     self.data_dir, self.split_size)
             else:
-                train_ds, val_ds, test_ds, weights = get_putany_regression_dataset(
+                train_ds, val_ds, test_ds, weights, max_c, min_c = get_putany_regression_dataset(
                     self.data_dir, self.split_size, self.exclude_classes)
         else:
             if self.cls:
                 train_ds, val_ds, test_ds, weights = get_moist_cls_dataset(
                     self.data_dir, self.split_size)
             else:
-                train_ds, val_ds, test_ds, weights = get_moist_regression_dataset(
+                train_ds, val_ds, test_ds, weights, max_c, min_c = get_moist_regression_dataset(
                     self.data_dir, self.split_size, self.exclude_classes)
 
         self.train_ds = HapticDataset(train_ds)
         self.val_ds = HapticDataset(val_ds)
         self.test_ds = HapticDataset(test_ds)
         self.weights = weights
+
+        if not self.cls:
+            self.max_c = max_c
+            self.min_c = min_c
 
     def train_dataloader(self):
         return DataLoader(self.train_ds, batch_size=self.batch_size, shuffle=True, num_workers=8, pin_memory=True)

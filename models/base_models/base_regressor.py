@@ -30,7 +30,13 @@ class LitBaseRegressor(pl.LightningModule):
         self.val_mse = torchmetrics.MeanSquaredError()
         self.val_mae = torchmetrics.MeanAbsoluteError()
 
-    def calculate_test_metrics(self, pred, target):
+        self.max_c = 1
+        self.min_c = 0
+
+    def calculate_test_metrics(self, m_pred, m_target):
+        pred = (m_pred * (self.max_c - self.min_c)) + self.min_c
+        target = (m_target * (self.max_c - self.min_c)) + self.min_c
+
         self.concordance_cc(pred, target)
         self.cosine_similarity(pred, target)
         self.explained_variance(pred, target)
@@ -67,14 +73,21 @@ class LitBaseRegressor(pl.LightningModule):
         self.log('test/wmape', self.wmape, on_epoch=True, on_step=False, prog_bar=True)
 
     def calculate_val_metrics(self, pred, target):
-        self.val_mape(pred, target)
-        self.val_mse(pred, target)
-        self.val_mae(pred, target)
+        m_pred = (pred * (self.max_c - self.min_c)) + self.min_c
+        m_target = (target * (self.max_c - self.min_c)) + self.min_c
+
+        self.val_mape(m_pred, m_target)
+        self.val_mse(m_pred, m_target)
+        self.val_mae(m_pred, m_target)
 
     def log_all_val_metrics(self):
         self.log('val/mape', self.val_mape, on_step=False, on_epoch=True, prog_bar=False)
         self.log('val/mae', self.val_mae, on_step=False, on_epoch=True, prog_bar=False)
         self.log('val/mse', self.val_mse, on_step=False, on_epoch=True, prog_bar=False)
+
+    def set_max_min(self, max_val, min_val):
+        self.max_c = max_val
+        self.min_c = min_val
 
     @staticmethod
     def get_default_config():

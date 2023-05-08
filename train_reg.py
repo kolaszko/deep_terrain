@@ -22,7 +22,7 @@ def train_cls(args, algorithm):
 
     model_checkpoint = ModelCheckpoint(monitor='val/accuracy', mode='max', save_top_k=1)
     trainer = pl.Trainer(max_epochs=args.max_epochs, callbacks=[
-        EarlyStopping(monitor="val/accuracy", min_delta=0.00, patience=100, verbose=True, mode="max"),
+        EarlyStopping(monitor="val/accuracy", min_delta=0.00, patience=50, verbose=True, mode="max"),
         LearningRateMonitor(logging_interval='epoch'),
         model_checkpoint],
         logger=logger,
@@ -56,12 +56,12 @@ def train_reg(args, algorithm, exclude_classes, cls_ckpt_path, cls_config):
     logger = NeptuneLogger(
         project='PPI/moist-reg' if args.moist else "PPI/friction-regression",
         api_token=os.getenv('NEPTUNE_API_TOKEN'),
-        tags=["regression", "combinations", "best"],
+        tags=["regression", "combinations", "best", "v2"],
         log_model_checkpoints=False)
 
     model_checkpoint = ModelCheckpoint(monitor='val/loss', mode='min', save_top_k=1)
     trainer = pl.Trainer(max_epochs=args.max_epochs, callbacks=[
-        EarlyStopping(monitor="val/loss", min_delta=0.00, patience=50, verbose=True, mode="min"),
+        EarlyStopping(monitor="val/loss", min_delta=0.00, patience=20, verbose=True, mode="min"),
         LearningRateMonitor(logging_interval='epoch'),
         model_checkpoint],
         logger=logger,
@@ -80,6 +80,7 @@ def train_reg(args, algorithm, exclude_classes, cls_ckpt_path, cls_config):
 
     tuner = Tuner(trainer)
     tuner.scale_batch_size(model, datamodule=data)
+    model.set_max_min(data.max_c, data.min_c)
 
     logger.experiment['model'] = model.model_name
     logger.experiment['hyperparams'] = model.config
@@ -98,6 +99,9 @@ def task(args, algorithm):
     r = 1 if args.moist else 2
 
     exclude_classes = list(combinations(classes, r))
+    exclude_classes.insert(0, ())
+
+    print(exclude_classes)
 
     cls_ckpt, cls_config = train_cls(args, algorithm)
 
@@ -133,7 +137,7 @@ def pipeline(args):
 if __name__ == '__main__':
 
     parser = ArgumentParser()
-    parser.add_argument('--dataset-path', type=str, default='/root/friction_classes.pickle')
+    parser.add_argument('--dataset-path', type=str, default='/home/mikolaj/Datasets/moist/moist.txt')
     parser.add_argument('--batch-size', type=int, default=64)
     parser.add_argument('--max-epochs', type=int, default=1)
     parser.add_argument('--mlstm-fcn', action='store_true')
