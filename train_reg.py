@@ -10,7 +10,8 @@ from pytorch_lightning.tuner.tuning import Tuner
 
 from data import LitHapticDataset
 from models import (LitMLSTMfcnClassifier,
-                    LitTSTransformerClassifier, LitMLSTMfcnRegressor, LitTSTransformerRegressor)
+                    LitTSTransformerClassifier, LitMLSTMfcnRegressor, LitTSTransformerRegressor,
+                    LitHAPTRClassifier, LitHAPTRRegressor)
 
 
 def train_cls(args, algorithm):
@@ -127,6 +128,14 @@ def pipeline(args):
                 'reg': LitTSTransformerRegressor
             }
         )
+    
+    if args.haptr:
+        algorithms.append(
+            {
+                'cls': LitHAPTRClassifier,
+                'reg': LitHAPTRRegressor
+            }
+        )
 
     print(algorithms)
 
@@ -142,6 +151,7 @@ if __name__ == '__main__':
     parser.add_argument('--max-epochs', type=int, default=1)
     parser.add_argument('--mlstm-fcn', action='store_true')
     parser.add_argument('--ts-transformer', action='store_true')
+    parser.add_argument('--haptr', action='store_false')
     parser.add_argument('--moist', action='store_true')
 
     args, _ = parser.parse_known_args()
