@@ -5,13 +5,13 @@ import optuna
 import pytorch_lightning as pl
 import torch
 from optuna.integration import PyTorchLightningPruningCallback
-from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor
+from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor, ModelCheckpoint
 from pytorch_lightning.loggers import NeptuneLogger
 from pytorch_lightning.tuner.tuning import Tuner
 
 from data import LitHapticDataset
 from models import (LitMLSTMfcnClassifier, LitTCNClassifier,
-                    LitTSTransformerClassifier)
+                    LitTSTransformerClassifier, LitHAPTRClassifier)
 
 
 def objective(trial, args, algorithm):
@@ -55,7 +55,8 @@ def rerun_best_trial(trial, args, algorithm):
 
     trainer = pl.Trainer(max_epochs=args.max_epochs, callbacks=[
         EarlyStopping(monitor="val/accuracy", min_delta=0.00, patience=50, verbose=True, mode="max"),
-        LearningRateMonitor(logging_interval='epoch')],
+        LearningRateMonitor(logging_interval='epoch'),
+        ModelCheckpoint(monitor='val/loss', mode='min', save_top_k=1)],
         logger=logger,
         accelerator='gpu' if torch.cuda.is_available() else 'cpu', devices=1, log_every_n_steps=1)
 
@@ -71,7 +72,7 @@ def rerun_best_trial(trial, args, algorithm):
         logger.experiment['batch_size'] = data.batch_size
 
         trainer.fit(model, data)
-        trainer.test(datamodule=data)
+        trainer.test(datamodule=data, ckpt_path='best')
     finally:
         logger.experiment.stop()
 
@@ -86,6 +87,9 @@ def optuna_pipeline(args):
 
     if args.ts_transformer:
         algorithms.append(LitTSTransformerClassifier)
+        
+    if args.haptr:
+        algorithms.append(LitHAPTRClassifier)
 
     print(algorithms)
 
@@ -105,6 +109,7 @@ if __name__ == '__main__':
     parser.add_argument('--tcn', action='store_true')
     parser.add_argument('--mlstm-fcn', action='store_true')
     parser.add_argument('--ts-transformer', action='store_true')
+    parser.add_argument('--haptr', action='store_true')
 
     args, _ = parser.parse_known_args()
     optuna_pipeline(args)

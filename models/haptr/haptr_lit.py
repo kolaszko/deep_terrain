@@ -93,7 +93,7 @@ class LitHAPTRClassifier(LitBaseCls):
     def fromOptunaTrial(cls, trial):
         config = cls.get_default_config()
         config['projection_dim'] = 2 ** trial.suggest_int('projection_dim', 4, 6, step=1)
-        config['nheads'] = 2 ** trial.suggest_int('nheads', 2, 4, step=1)
+        config['nheads'] = 2 ** trial.suggest_int('nheads', 3, 4, step=1)
         config['num_encoder_layers'] = 2 ** trial.suggest_int('num_encoder_layers', 2, 4, step=1)
         config['feed_forward'] = 2 ** trial.suggest_int('feed_forward', 7, 9, step=1)
         config['dropout'] = trial.suggest_float('dropout', 0.1, 0.4, step=0.1)
