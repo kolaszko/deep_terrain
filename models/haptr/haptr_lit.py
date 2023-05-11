@@ -60,8 +60,9 @@ class LitHAPTRClassifier(LitBaseCls):
         self.log_all_test_metrics()
 
     def configure_optimizers(self):
-        optimizer = torch.optim.AdamW(self.model.parameters(), lr=5e-4)
-        lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.98)
+        optimizer = torch.optim.AdamW(self.model.parameters(), lr=1e-3)
+        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.trainer.max_epochs, eta_min=1e-6)
+
         return [optimizer], [lr_scheduler]
     
     def __prepare_input(self, x):
@@ -87,6 +88,18 @@ class LitHAPTRClassifier(LitBaseCls):
             'dim_modalities': [3, 3],
             'num_modalities': 2
         }
+    
+    @classmethod
+    def fromOptunaTrial(cls, trial):
+        config = cls.get_default_config()
+        config['projection_dim'] = 2 ** trial.suggest_int('projection_dim', 4, 6, step=1)
+        config['nheads'] = 2 ** trial.suggest_int('nheads', 2, 4, step=1)
+        config['num_encoder_layers'] = 2 ** trial.suggest_int('num_encoder_layers', 2, 4, step=1)
+        config['feed_forward'] = 2 ** trial.suggest_int('feed_forward', 7, 9, step=1)
+        config['dropout'] = trial.suggest_float('dropout', 0.1, 0.4, step=0.1)
+
+        return cls(config=config)
+    
     
 class LitHAPTRRegressor(LitBaseRegressor):
     def __init__(self, config):
@@ -147,7 +160,7 @@ class LitHAPTRRegressor(LitBaseRegressor):
 
     def configure_optimizers(self):
         optimizer = torch.optim.AdamW(self.model.parameters(), lr=5e-5)
-        lr_scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer, gamma=0.98)
+        lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=self.trainer.max_epochs, eta_min=1e-7)
         return [optimizer], [lr_scheduler]
     
     def __prepare_input(self, x):
