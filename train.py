@@ -26,7 +26,7 @@ def objective(args):
         max_epochs=1, callbacks=[early_stop_callback, lr_monitor], logger=logger, log_every_n_steps=1,
         accelerator='gpu' if torch.cuda.is_available() else 'cpu', devices=1)
 
-    model = LitTSTransformerClassifier()
+    model = LitTCNClassifier(config=LitTCNClassifier.get_default_config())
     data = LitHapticDataset(args.dataset_path, 128)
 
     tuner = Tuner(trainer)
