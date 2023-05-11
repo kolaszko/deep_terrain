@@ -13,27 +13,41 @@ class LitHapticDataset(pl.LightningDataModule):
         self.exclude_classes = exclude_classes
         self.split_size = split_size
         self.is_moist = is_moist
+        self.num_classes = 1
+
         if self.is_moist:
-            self.num_classes = 6
+            if self.cls:
+                self.num_classes = 6
             self.max_len = 150
         else:
-            self.num_classes = 8
+            if self.cls:
+                self.num_classes = 8
             self.max_len = 160
 
     def setup(self, stage: str) -> None:
         if not self.is_moist:
-            train_ds, val_ds, test_ds, weights = get_putany_cls_dataset(
-                self.data_dir, self.split_size) if self.cls else get_putany_regression_dataset(
-                self.data_dir, self.split_size, self.exclude_classes)
+            if self.cls:
+                train_ds, val_ds, test_ds, weights = get_putany_cls_dataset(
+                    self.data_dir, self.split_size)
+            else:
+                train_ds, val_ds, test_ds, weights, max_c, min_c = get_putany_regression_dataset(
+                    self.data_dir, self.split_size, self.exclude_classes)
         else:
-            train_ds, val_ds, test_ds, weights = get_moist_cls_dataset(
-                self.data_dir, self.split_size) if self.cls else get_moist_regression_dataset(
-                self.data_dir, self.split_size, self.exclude_classes)
+            if self.cls:
+                train_ds, val_ds, test_ds, weights = get_moist_cls_dataset(
+                    self.data_dir, self.split_size)
+            else:
+                train_ds, val_ds, test_ds, weights, max_c, min_c = get_moist_regression_dataset(
+                    self.data_dir, self.split_size, self.exclude_classes)
 
         self.train_ds = HapticDataset(train_ds)
         self.val_ds = HapticDataset(val_ds)
         self.test_ds = HapticDataset(test_ds)
         self.weights = weights
+
+        if not self.cls:
+            self.max_c = max_c
+            self.min_c = min_c
 
     def train_dataloader(self):
         return DataLoader(self.train_ds, batch_size=self.batch_size, shuffle=True, num_workers=8, pin_memory=True)

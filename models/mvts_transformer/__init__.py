@@ -1,1 +1,1 @@
-from .ts_transformer_lit import LitTSTransformerClassifier
+from .ts_transformer_lit import LitTSTransformerClassifier, LitTSTransformerRegressor

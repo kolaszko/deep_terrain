@@ -1,1 +1,1 @@
-from .mlstm_fcn_lit import LitMLSTMfcnClassifier
+from .mlstm_fcn_lit import LitMLSTMfcnClassifier, LitMLSTMfcnRegressor

@@ -72,12 +72,18 @@ def get_putany_regression_dataset(path, split_size, exclude_classes, normalize=T
                 'label': sample['label']
             })
 
-    test_dataset = [sample for sample in dataset if sample['label'] in exclude_classes]
-    trainval_dataset = [sample for sample in dataset if sample['label'] not in exclude_classes]
+    # test_dataset = [sample for sample in dataset if sample['label'] in exclude_classes]
+    # trainval_dataset = [sample for sample in dataset if sample['label'] not in exclude_classes]
+
+    labels = [sample['label'] for sample in dataset]
+    trainval_dataset, test_dataset = train_test_split(
+        dataset, test_size=split_size, stratify=labels, random_state=random_state)
+
+    trainval_dataset = [sample for sample in trainval_dataset if sample['label'] not in exclude_classes]
 
     if normalize:
         signals = [s['signal'] for s in trainval_dataset]
-        coeffs = [s['friction'] for s in trainval_dataset]
+        coeffs = [s['friction'] for s in dataset]
 
         signals = np.asarray(signals)
         coeffs = np.asarray(coeffs)
@@ -85,21 +91,21 @@ def get_putany_regression_dataset(path, split_size, exclude_classes, normalize=T
         mean_signal = np.mean(signals, (0, 1))
         std_signal = np.std(signals, (0, 1))
 
-        mean_coeffs = np.mean(coeffs)
-        std_coeffs = np.mean(coeffs)
+        max_coeffs = np.max(coeffs)
+        min_coeffs = np.min(coeffs)
 
         for s in trainval_dataset:
             s['signal'] = (s['signal'] - mean_signal) / std_signal
-            s['friction'] = (s['friction'] - mean_coeffs) / std_coeffs
+            s['friction'] = (s['friction'] - min_coeffs) / (max_coeffs - min_coeffs)
 
         for s in test_dataset:
             s['signal'] = (s['signal'] - mean_signal) / std_signal
-            s['friction'] = (s['friction'] - mean_coeffs) / std_coeffs
+            s['friction'] = (s['friction'] - min_coeffs) / (max_coeffs - min_coeffs)
 
     train_dataset, val_dataset = train_test_split(trainval_dataset, test_size=split_size, stratify=[
         sample['label'] for sample in trainval_dataset], random_state=random_state)
 
-    return train_dataset, val_dataset, test_dataset, None
+    return train_dataset, val_dataset, test_dataset, None, max_coeffs, min_coeffs
 
 
 def get_moist_cls_dataset(path, split_size, random_state=42):
@@ -132,11 +138,9 @@ def get_moist_regression_dataset(path, split_size, exclude_classes, random_state
     ds_raw = np.loadtxt(path)
 
     moist_table = np.asarray([0.12, 0.2, 0.32, 0.56, 0.64, 0.76])
-
-    moist_mean = np.mean(moist_table)
-    moist_std = np.std(moist_table)
-
-    moist_table = (moist_table - moist_mean) / moist_std
+    min_coeffs = np.min(moist_table)
+    max_coeffs = np.max(moist_table)
+    moist_table = (moist_table - min_coeffs) / (max_coeffs - min_coeffs)
 
     dataset = []
     for i in range(ds_raw.shape[0]):
@@ -150,10 +154,16 @@ def get_moist_regression_dataset(path, split_size, exclude_classes, random_state
             }
         )
 
-    test_dataset = [sample for sample in dataset if sample['label'] in exclude_classes]
-    trainval_dataset = [sample for sample in dataset if sample['label'] not in exclude_classes]
+    labels = [sample['label'] for sample in dataset]
+    trainval_dataset, test_dataset = train_test_split(
+        dataset, test_size=split_size, stratify=labels, random_state=random_state)
+
+    trainval_dataset = [sample for sample in trainval_dataset if sample['label'] not in exclude_classes]
+
+    # test_dataset = [sample for sample in dataset if sample['label'] in exclude_classes]
+    # trainval_dataset = [sample for sample in dataset if sample['label'] not in exclude_classes]
 
     train_dataset, val_dataset = train_test_split(trainval_dataset, test_size=split_size, stratify=[
         sample['label'] for sample in trainval_dataset], random_state=random_state)
 
-    return train_dataset, val_dataset, test_dataset, None
+    return train_dataset, val_dataset, test_dataset, None, max_coeffs, min_coeffs
