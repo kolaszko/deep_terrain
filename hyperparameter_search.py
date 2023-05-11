@@ -75,7 +75,6 @@ def rerun_best_trial(trial, args, algorithm):
     finally:
         logger.experiment.stop()
 
-
 def optuna_pipeline(args):
 
     algorithms = []
